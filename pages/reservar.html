@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmar Reserva - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <div class="detail-grid">
+        <!-- Columna izquierda: Imagen y resumen de estadía -->
+        <div>
+          <img id="resImg" src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80"
+               alt="Habitación seleccionada" style="width: 100%; height: 340px; object-fit: cover; border-radius: 10px;">
+          <h1 id="resTitle" style="font-size: 2rem; font-weight: 800; margin-top: 14px;">Suite</h1>
+          <span class="badge-disponible">Disponible</span>
+
+          <div class="three-col-info">
+            <div>
+              <p style="font-weight: 700; font-size: 0.9rem;">Fecha de entrada</p>
+              <p id="resEntrada" style="color: var(--texto-etiqueta); margin-top: 4px;">02 10 2026</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 0.9rem;">Fecha de salida</p>
+              <p id="resSalida" style="color: var(--texto-etiqueta); margin-top: 4px;">05 10 2026</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 0.9rem;">Cantidad de personas</p>
+              <p id="resPersonas" style="color: var(--texto-etiqueta); margin-top: 4px;">2 adultos</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha: Descripción, servicios extra y total -->
+        <div>
+          <div class="box-card">
+            <h2 style="font-size: 1.15rem; margin-bottom: 8px;">Descripción</h2>
+            <p id="resDesc" style="color: var(--texto-etiqueta); line-height: 1.5;"></p>
+          </div>
+
+          <div class="box-card">
+            <h2 style="font-size: 1.15rem;">Servicios incluidos y extras</h2>
+            <div id="resServicesGrid" class="services-grid"></div>
+
+            <!-- Panel desplegable de servicios extra dinámico -->
+            <div id="extrasPanel" style="display: none; margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--borde-gris);">
+              <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 8px;">Selecciona servicios adicionales:</p>
+              <div id="extrasListContainer"></div>
+            </div>
+
+            <div style="text-align: right; margin-top: 14px;">
+              <button type="button" id="btnToggleExtras" style="background: none; border: none; color: var(--azul-accion); font-weight: 700; cursor: pointer; font-size: 0.95rem;">
+                + Añadir servicio extra
+              </button>
+            </div>
+          </div>
+
+          <!-- Total y botones de acción -->
+          <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0;">
+            <span style="font-size: 1.5rem; font-weight: 800;">Total :</span>
+            <span id="resTotal" class="price-red-large">$50</span>
+            <span style="color: var(--rojo-precio); font-weight: 700;">USD</span>
+            <span id="detalleNoches" style="font-size: 0.85rem; color: var(--texto-etiqueta);"></span>
+          </div>
+
+          <div class="two-col-inputs">
+            <button type="button" id="btnIrPagar" class="btn btn-blue">Pagar</button>
+            <a href="./habitaciones.html" class="btn btn-outline-blue">Cancelar</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const defaultHab = HotelData.getHabitacion('suite');
+      const reserva = JSON.parse(sessionStorage.getItem('reserva_en_curso') || 'null') || {
+        habitacionId: defaultHab.id,
+        titulo: defaultHab.titulo,
+        precioNoche: defaultHab.precio,
+        imagen: defaultHab.imagen,
+        desc: defaultHab.descripcion,
+        servicios: defaultHab.servicios,
+        entrada: SecurityUtils.getLocalDateString(),
+        salida: SecurityUtils.getLocalDateString(new Date(Date.now() + 86400000 * 3)),
+        personas: '2'
+      };
+
+      document.getElementById('resTitle').textContent = reserva.titulo;
+      document.getElementById('resImg').src = reserva.imagen;
+      document.getElementById('resDesc').textContent = reserva.desc;
+      document.getElementById('resEntrada').textContent = reserva.entrada;
+      document.getElementById('resSalida').textContent = reserva.salida;
+      document.getElementById('resPersonas').textContent = `${reserva.personas} adultos`;
+
+      // Renderizar servicios incluidos dinámicamente
+      const srvContainer = document.getElementById('resServicesGrid');
+      srvContainer.innerHTML = '';
+      const serviciosLista = reserva.servicios || defaultHab.servicios;
+      serviciosLista.forEach((srv) => {
+        const div = document.createElement('div');
+        div.className = 'service-item';
+        div.textContent = `✔ ${srv}`;
+        srvContainer.appendChild(div);
+      });
+
+      // Renderizar servicios adicionales desde HotelData
+      const extrasContainer = document.getElementById('extrasListContainer');
+      extrasContainer.innerHTML = '';
+      HotelData.serviciosExtra.forEach((ext) => {
+        const label = document.createElement('label');
+        label.style.display = 'block';
+        label.style.marginBottom = '8px';
+        label.style.cursor = 'pointer';
+        label.innerHTML = `
+          <input type="checkbox" class="extra-check" data-name="${ext.nombre}" value="${ext.precio}">
+          ${ext.nombre} (+$${ext.precio} USD)
+        `;
+        extrasContainer.appendChild(label);
+      });
+
+      // Calcular noches de manera segura con fecha local
+      const d1 = new Date(reserva.entrada + 'T00:00:00');
+      const d2 = new Date(reserva.salida + 'T00:00:00');
+      const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+      document.getElementById('detalleNoches').textContent = `(${diffDays} noche${diffDays > 1 ? 's' : ''})`;
+
+      function calcularTotal() {
+        let extrasSum = 0;
+        const extrasSeleccionados = [];
+        document.querySelectorAll('.extra-check:checked').forEach((chk) => {
+          extrasSum += Number(chk.value);
+          extrasSeleccionados.push(chk.dataset.name);
+        });
+        const total = (reserva.precioNoche * diffDays) + extrasSum;
+        document.getElementById('resTotal').textContent = `$${total}`;
+        reserva.totalCalculado = total;
+        reserva.extras = extrasSeleccionados;
+      }
+
+      calcularTotal();
+
+      document.getElementById('btnToggleExtras').addEventListener('click', () => {
+        const panel = document.getElementById('extrasPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      });
+
+      document.querySelectorAll('.extra-check').forEach((chk) => {
+        chk.addEventListener('change', calcularTotal);
+      });
+
+      document.getElementById('btnIrPagar').addEventListener('click', () => {
+        sessionStorage.setItem('reserva_en_curso', JSON.stringify(reserva));
+        const session = SecurityUtils.getSession();
+        if (!session || !session.isAuthenticated) {
+          UI.toast('Inicia sesión para completar tu reservación.', 'info');
+          setTimeout(() => {
+            window.location.href = './login.html?redirect=' + encodeURIComponent('./pago.html');
+          }, 1200);
+        } else {
+          window.location.href = './pago.html';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

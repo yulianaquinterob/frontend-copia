@@ -1,0 +1,31 @@
+:root {
+  --morado-principal: #5B21F6;
+  --morado-hover: #4815D1;
+  --azul-accion: #007BFF;
+  --azul-accion-hover: #0062CC;
+  --azul-total-pago: #99CCFF;
+  --rojo-precio: #D32F2F;
+  --rojo-boton: #DC2626;
+  --texto-oscuro: #333333;
+  --texto-etiqueta: #757575;
+  --borde-gris: #CCCCCC;
+  --fondo-blanco: #FFFFFF;
+  --sombra-suave: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --radio-borde: 8px;
+  --fuente-principal: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--fuente-principal);
+}
+
+body {
+  background-color: #F5F5F7;
+  color: var(--texto-oscuro);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}

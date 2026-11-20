@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cambiar Contraseña - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <div class="form-container-desktop">
+        <h1 class="page-title">Cambiar contraseña</h1>
+
+        <div id="claveAlert" class="alert-msg"></div>
+
+        <form id="cambiarClaveForm" novalidate>
+          <div class="form-group">
+            <label for="oldPass" class="form-label">Antigua contraseña</label>
+            <input type="password" id="oldPass" class="form-control" autocomplete="current-password" required>
+          </div>
+
+          <div class="form-group">
+            <label for="newPass" class="form-label">Nueva contraseña</label>
+            <input type="password" id="newPass" class="form-control" autocomplete="new-password" required>
+            <small style="color: var(--texto-etiqueta); font-size: 0.8rem;">
+              Mínimo 8 caracteres, incluyendo mayúscula, minúscula y un número.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPass" class="form-label">Confirmar contraseña</label>
+            <input type="password" id="confirmPass" class="form-control" autocomplete="new-password" required>
+          </div>
+
+          <div style="margin-top: 26px;">
+            <button type="submit" class="btn btn-blue">Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    // Route Guard
+    if (!SecurityUtils.requireAuth('./login.html')) {
+      // Detiene la ejecución si no está autenticado
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('cambiarClaveForm');
+      const alertBox = document.getElementById('claveAlert');
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const oldPass = document.getElementById('oldPass').value;
+        const newPass = document.getElementById('newPass').value;
+        const confirmPass = document.getElementById('confirmPass').value;
+
+        if (!oldPass) {
+          alertBox.className = 'alert-msg alert-error';
+          alertBox.textContent = 'Debes ingresar tu antigua contraseña.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        if (!SecurityUtils.isStrongPassword(newPass)) {
+          alertBox.className = 'alert-msg alert-error';
+          alertBox.textContent = 'La nueva contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        if (newPass !== confirmPass) {
+          alertBox.className = 'alert-msg alert-error';
+          alertBox.textContent = 'La confirmación de contraseña no coincide.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        if (oldPass === newPass) {
+          alertBox.className = 'alert-msg alert-error';
+          alertBox.textContent = 'La nueva contraseña debe ser diferente a la anterior.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        // Guardar estado de clave actualizada
+        const key = SecurityUtils.getUserStorageKey('clave_updated');
+        localStorage.setItem(key, String(Date.now()));
+
+        form.reset();
+        alertBox.className = 'alert-msg alert-success';
+        alertBox.textContent = 'Contraseña actualizada con éxito.';
+        alertBox.style.display = 'block';
+        UI.toast('Contraseña actualizada con éxito.', 'success');
+      });
+    });
+  </script>
+</body>
+</html>

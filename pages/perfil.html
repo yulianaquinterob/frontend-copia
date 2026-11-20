@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .profile-menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border: 1px solid var(--borde-gris);
+      border-radius: var(--radio-borde);
+      background-color: #FFFFFF;
+      text-decoration: none;
+      color: #222222;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .profile-menu-item:hover {
+      border-color: var(--morado-principal);
+      background-color: #FAF5FF;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <div class="form-container-desktop">
+        <h1 class="page-title">Mi perfil</h1>
+
+        <nav aria-label="Opciones de perfil">
+          <a href="./mis-reservas.html" class="profile-menu-item">
+            <span>Mis reservas</span>
+            <span>▶</span>
+          </a>
+          <a href="./datos-personales.html" class="profile-menu-item">
+            <span>Mis datos personales</span>
+            <span>▶</span>
+          </a>
+          <a href="./cambiar-clave.html" class="profile-menu-item">
+            <span>Cambiar contraseña</span>
+            <span>▶</span>
+          </a>
+          <a href="./historial.html" class="profile-menu-item">
+            <span>Historial de reservas</span>
+            <span>▶</span>
+          </a>
+        </nav>
+
+        <div style="margin-top: 32px;">
+          <button type="button" id="btnCerrarSesion" class="btn btn-blue">Cerrar sesión</button>
+        </div>
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    // Route Guard
+    if (!SecurityUtils.requireAuth('./login.html')) {
+      // Detiene la ejecución si no está autenticado
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btnCerrarSesion').addEventListener('click', () => {
+        SecurityUtils.clearSession();
+        window.location.href = './login.html';
+      });
+    });
+  </script>
+</body>
+</html>

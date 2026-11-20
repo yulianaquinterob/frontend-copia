@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content" style="display: flex; flex-direction: column; justify-content: center;">
+        
+      <h1 class="page-title">Iniciar sesión</h1>
+
+      <div id="loginAlert" class="alert-msg alert-error"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="userEmail" class="form-label">Usuario o correo electrónico</label>
+          <input type="text" id="userEmail" class="form-control" autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="userPassword" class="form-label">Contraseña</label>
+          <div class="password-wrapper">
+            <input type="password" id="userPassword" class="form-control" autocomplete="current-password" required>
+            <button type="button" id="togglePassBtn" class="toggle-password">Ver</button>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 22px;">
+          <a href="#" id="forgotPassLink" style="color: var(--texto-oscuro); font-weight: 600; font-size: 0.9rem;">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+
+        <button type="submit" class="btn btn-purple">Ingresar</button>
+      </form>
+
+      <p style="text-align: center; margin-top: 24px; font-size: 0.95rem;">
+        ¿No tienes cuenta?
+        <a href="./datos-personales.html?modo=registro" style="color: var(--morado-principal); font-weight: 700; text-decoration: none;">
+          Regístrate
+        </a>
+      </p>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const passInput = document.getElementById('userPassword');
+      const toggleBtn = document.getElementById('togglePassBtn');
+      const alertBox = document.getElementById('loginAlert');
+
+      toggleBtn.addEventListener('click', () => {
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        toggleBtn.textContent = isPass ? 'Ocultar' : 'Ver';
+      });
+
+      document.getElementById('forgotPassLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        UI.toast('Se ha enviado un enlace de recuperación a tu correo registrado.', 'info');
+      });
+
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userEmail = document.getElementById('userEmail').value.trim();
+        const password = passInput.value;
+
+        if (!userEmail || password.length < 6) {
+          alertBox.textContent = 'Ingresa un usuario o correo válido y una contraseña de al menos 6 caracteres.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        alertBox.style.display = 'none';
+        SecurityUtils.setSession({
+          id: 'USR-001',
+          nombre: userEmail.split('@')[0],
+          email: userEmail.includes('@') ? userEmail : `${userEmail}@correo.com`
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const redirectUrl = params.get('redirect');
+        if (redirectUrl) {
+          window.location.href = decodeURIComponent(redirectUrl);
+        } else {
+          window.location.href = '../index.html';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Reserva habitaciones de lujo, suites y dobles en HotelReservas con los mejores precios y confirmación inmediata.">
+  <title>Inicio - Reservas de Hotel</title>
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <!-- Banner superior con buscador -->
+      <section class="hero-banner">
+        <form id="searchForm" class="search-bar-card">
+          <div class="search-field">
+            <label for="fechaEntrada">Fecha de entrada</label>
+            <input type="date" id="fechaEntrada" required>
+          </div>
+          <div class="search-field">
+            <label for="fechaSalida">Fecha de salida</label>
+            <input type="date" id="fechaSalida" required>
+          </div>
+          <div class="search-field">
+            <label for="huespedes">Habitación</label>
+            <select id="huespedes">
+              <option value="1">1 persona</option>
+              <option value="2" selected>2 personas</option>
+              <option value="3">3 personas</option>
+              <option value="4">4 personas</option>
+            </select>
+          </div>
+          <button type="submit" class="search-btn" title="Buscar habitaciones" aria-label="Buscar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </form>
+      </section>
+
+      <div id="searchFeedback" class="alert-msg alert-error"></div>
+
+      <!-- Listado dinámico de habitaciones -->
+      <section id="roomsList" aria-label="Habitaciones disponibles"></section>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="./js/security.js"></script>
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
+  <script src="./js/components.js"></script>
+  <script>
+    function renderRooms(lista) {
+      const container = document.getElementById('roomsList');
+      container.innerHTML = '';
+
+      if (lista.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px;">
+            <p style="font-size: 1.15rem; color: var(--texto-etiqueta); margin-bottom: 12px;">
+              No se encontraron habitaciones para la capacidad solicitada.
+            </p>
+            <button type="button" class="btn btn-purple" style="max-width: 220px;" onclick="renderRooms(HotelData.habitaciones)">
+              Ver todas las habitaciones
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      lista.forEach((hab) => {
+        const card = document.createElement('article');
+        card.className = 'room-card';
+
+        const img = document.createElement('img');
+        img.src = hab.imagen;
+        img.alt = hab.titulo;
+        img.className = 'room-card__img';
+
+        const body = document.createElement('div');
+        body.className = 'room-card__body';
+
+        const title = document.createElement('h2');
+        title.className = 'room-card__title';
+        title.textContent = hab.titulo;
+
+        const middle = document.createElement('div');
+        middle.className = 'room-card__middle';
+
+        const desc = document.createElement('p');
+        desc.className = 'room-card__desc';
+        desc.textContent = hab.descripcion;
+
+        const link = document.createElement('a');
+        link.href = `./pages/habitaciones.html?id=${encodeURIComponent(hab.id)}`;
+        link.className = 'btn-red-small';
+        link.textContent = 'Ver más';
+
+        middle.append(desc, link);
+
+        const footer = document.createElement('div');
+        footer.className = 'room-card__footer';
+
+        const rating = document.createElement('span');
+        rating.className = 'room-card__rating';
+        rating.textContent = `★ ${hab.rating}`;
+
+        const price = document.createElement('span');
+        price.className = 'room-card__price';
+        price.textContent = `$${hab.precio}`;
+
+        footer.append(rating, price);
+        body.append(title, middle, footer);
+        card.append(img, body);
+        container.appendChild(card);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Configurar fechas por defecto con fecha local segura
+      const hoyStr = SecurityUtils.getLocalDateString();
+      const fechaSalidaObj = new Date();
+      fechaSalidaObj.setDate(fechaSalidaObj.getDate() + 3);
+      const salidaStr = SecurityUtils.getLocalDateString(fechaSalidaObj);
+
+      const entradaInput = document.getElementById('fechaEntrada');
+      const salidaInput = document.getElementById('fechaSalida');
+      const huespedesSelect = document.getElementById('huespedes');
+
+      entradaInput.min = hoyStr;
+      entradaInput.value = hoyStr;
+
+      salidaInput.min = hoyStr;
+      salidaInput.value = salidaStr;
+
+      entradaInput.addEventListener('change', () => {
+        salidaInput.min = entradaInput.value;
+        if (salidaInput.value <= entradaInput.value) {
+          const nuevaSalida = new Date(entradaInput.value + 'T00:00:00');
+          nuevaSalida.setDate(nuevaSalida.getDate() + 1);
+          salidaInput.value = SecurityUtils.getLocalDateString(nuevaSalida);
+        }
+      });
+
+      renderRooms(HotelData.habitaciones);
+
+      document.getElementById('searchForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const entradaVal = entradaInput.value;
+        const salidaVal = salidaInput.value;
+        const personasVal = huespedesSelect.value;
+        const feedback = document.getElementById('searchFeedback');
+
+        if (salidaVal <= entradaVal) {
+          feedback.textContent = 'La fecha de salida debe ser posterior a la fecha de entrada.';
+          feedback.style.display = 'block';
+          return;
+        }
+        feedback.style.display = 'none';
+
+        sessionStorage.setItem('filtro_reserva', JSON.stringify({
+          entrada: entradaVal,
+          salida: salidaVal,
+          personas: personasVal
+        }));
+
+        const filtradas = HotelData.filtrarPorHuespedes(personasVal);
+        renderRooms(filtradas);
+        UI.toast(`Búsqueda actualizada: ${filtradas.length} habitación(es) disponible(s).`, 'success');
+      });
+    });
+  </script>
+</body>
+</html>

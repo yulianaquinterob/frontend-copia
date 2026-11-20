@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Datos Personales - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .data-field-row {
+      margin-bottom: 16px;
+    }
+    .data-field-row label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--texto-etiqueta);
+      margin-bottom: 4px;
+    }
+    .data-field-row input,
+    .data-field-row select {
+      width: 100%;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111827;
+      border: 1px solid transparent;
+      background-color: transparent;
+      padding: 6px 0;
+      border-radius: 6px;
+    }
+    .data-field-row.editing input,
+    .data-field-row.editing select {
+      border: 1px solid var(--borde-gris);
+      background-color: #FFFFFF;
+      padding: 10px 12px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <div class="form-container-desktop">
+        <h1 class="page-title" id="datosTitle">Mis datos personales</h1>
+
+        <div id="datosAlert" class="alert-msg"></div>
+
+        <form id="datosForm" class="box-card" novalidate>
+          <div class="data-field-row">
+            <label for="dpNombre">Nombre:</label>
+            <input type="text" id="dpNombre" placeholder="Tu nombre" disabled required>
+          </div>
+          <div class="data-field-row">
+            <label for="dpApellidos">Apellidos:</label>
+            <input type="text" id="dpApellidos" placeholder="Tus apellidos" disabled required>
+          </div>
+          <div class="data-field-row">
+            <label for="dpTipoDoc">Tipo de documento:</label>
+            <select id="dpTipoDoc" disabled>
+              <option value="CC" selected>Cédula de Ciudadanía (CC)</option>
+              <option value="CE">Cédula de Extranjería (CE)</option>
+              <option value="PAS">Pasaporte</option>
+            </select>
+          </div>
+          <div class="data-field-row">
+            <label for="dpNumDoc">Número de documento:</label>
+            <input type="text" id="dpNumDoc" placeholder="Número de documento" disabled required>
+          </div>
+          <div class="data-field-row">
+            <label for="dpNacimiento">Fecha de nacimiento:</label>
+            <input type="date" id="dpNacimiento" disabled required>
+          </div>
+          <div class="data-field-row">
+            <label for="dpEmail">E-mail:</label>
+            <input type="email" id="dpEmail" placeholder="correo@ejemplo.com" disabled required>
+          </div>
+          <div class="data-field-row" style="margin-bottom: 0;">
+            <label for="dpTelefono">Teléfono:</label>
+            <input type="tel" id="dpTelefono" placeholder="Número de teléfono móvil" disabled required>
+          </div>
+        </form>
+
+        <div style="text-align: center; margin-top: 22px;">
+          <button type="button" id="btnModificarDatos" class="btn btn-blue" style="max-width: 260px;">
+            Modificar datos
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const esRegistro = params.get('modo') === 'registro';
+
+      // Route guard: Exigir autenticación a menos que sea nuevo registro
+      if (!esRegistro && !SecurityUtils.requireAuth('./login.html')) {
+        return;
+      }
+
+      const btn = document.getElementById('btnModificarDatos');
+      const alertBox = document.getElementById('datosAlert');
+      const rows = document.querySelectorAll('.data-field-row');
+      const inputs = document.querySelectorAll('#datosForm input, #datosForm select');
+      let isEditing = false;
+
+      const session = SecurityUtils.getSession();
+      const storageKey = SecurityUtils.getUserStorageKey('usuario_datos');
+
+      // Cargar datos guardados si existen
+      const savedData = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      if (savedData) {
+        document.getElementById('dpNombre').value = savedData.nombre || '';
+        document.getElementById('dpApellidos').value = savedData.apellidos || '';
+        document.getElementById('dpTipoDoc').value = savedData.tipoDoc || 'CC';
+        document.getElementById('dpNumDoc').value = savedData.numDoc || '';
+        document.getElementById('dpNacimiento').value = savedData.nacimiento || '';
+        document.getElementById('dpEmail').value = savedData.email || '';
+        document.getElementById('dpTelefono').value = savedData.telefono || '';
+      } else if (session) {
+        document.getElementById('dpNombre').value = session.nombre || '';
+        document.getElementById('dpEmail').value = session.email || '';
+      }
+
+      // Si viene desde "¿No tienes cuenta? Regístrate" en login.html
+      if (esRegistro) {
+        document.getElementById('datosTitle').textContent = 'Registro de usuario';
+        inputs.forEach((el) => { el.value = ''; el.disabled = false; });
+        document.getElementById('dpTipoDoc').value = 'CC';
+        rows.forEach((r) => r.classList.add('editing'));
+        btn.textContent = 'Guardar registro';
+        isEditing = true;
+      }
+
+      btn.addEventListener('click', () => {
+        if (!isEditing) {
+          isEditing = true;
+          inputs.forEach((el) => el.disabled = false);
+          rows.forEach((r) => r.classList.add('editing'));
+          btn.textContent = 'Guardar cambios';
+          alertBox.style.display = 'none';
+          return;
+        }
+
+        const email = document.getElementById('dpEmail').value.trim();
+        const telefono = document.getElementById('dpTelefono').value.trim();
+        const nombre = document.getElementById('dpNombre').value.trim();
+        const numDoc = document.getElementById('dpNumDoc').value.trim();
+
+        if (!nombre || !numDoc || !SecurityUtils.isValidEmail(email) || !/^\d{7,15}$/.test(telefono)) {
+          alertBox.className = 'alert-msg alert-error';
+          alertBox.textContent = 'Verifica que el nombre, número de documento, correo y teléfono (7-15 dígitos) sean válidos.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        const datosActualizados = {
+          nombre: SecurityUtils.sanitizeText(nombre),
+          apellidos: SecurityUtils.sanitizeText(document.getElementById('dpApellidos').value),
+          tipoDoc: document.getElementById('dpTipoDoc').value,
+          numDoc: SecurityUtils.sanitizeText(numDoc),
+          nacimiento: document.getElementById('dpNacimiento').value,
+          email: SecurityUtils.sanitizeText(email),
+          telefono: SecurityUtils.sanitizeText(telefono)
+        };
+
+        if (esRegistro) {
+          SecurityUtils.setSession({
+            id: 'USR-' + Date.now(),
+            nombre: datosActualizados.nombre,
+            email: datosActualizados.email
+          });
+          const newKey = SecurityUtils.getUserStorageKey('usuario_datos');
+          localStorage.setItem(newKey, JSON.stringify(datosActualizados));
+          UI.toast('¡Registro completado exitosamente!', 'success');
+          setTimeout(() => {
+            window.location.href = '../index.html';
+          }, 1200);
+          return;
+        }
+
+        localStorage.setItem(storageKey, JSON.stringify(datosActualizados));
+
+        isEditing = false;
+        inputs.forEach((el) => el.disabled = true);
+        rows.forEach((r) => r.classList.remove('editing'));
+        btn.textContent = 'Modificar datos';
+
+        alertBox.className = 'alert-msg alert-success';
+        alertBox.textContent = 'Datos personales actualizados correctamente.';
+        alertBox.style.display = 'block';
+      });
+    });
+  </script>
+</body>
+</html>

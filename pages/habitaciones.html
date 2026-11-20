@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle de Habitación - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <!-- Barra superior de filtro editable -->
+      <div class="box-card" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between;">
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+          <label class="form-label" for="detEntrada">Fecha de entrada</label>
+          <input type="date" id="detEntrada" class="form-control">
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+          <label class="form-label" for="detSalida">Fecha de salida</label>
+          <input type="date" id="detSalida" class="form-control">
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+          <label class="form-label" for="detPersonas">Habitación</label>
+          <select id="detPersonas" class="form-control">
+            <option value="1">1 adulto</option>
+            <option value="2" selected>2 adultos</option>
+            <option value="3">3 adultos</option>
+            <option value="4">4 adultos</option>
+          </select>
+        </div>
+        <button type="button" id="btnActualizarFiltro" class="btn btn-blue" style="width: auto; padding: 12px 24px;">
+          Actualizar
+        </button>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Columna izquierda: Imagen principal -->
+        <div>
+          <img id="roomMainImg" src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80"
+               alt="Vista de habitación" style="width: 100%; height: 380px; object-fit: cover; border-radius: 10px;">
+        </div>
+
+        <!-- Columna derecha: Información, reseñas y servicios -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;">
+            <div>
+              <h1 id="roomTitle" style="font-size: 2rem; font-weight: 800;">Suite</h1>
+              <span class="badge-disponible">Disponible</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div>
+                <span style="color: var(--texto-etiqueta); font-weight: 600;">desde </span>
+                <span id="roomPrice" class="price-red-large">$50</span>
+                <span style="color: var(--rojo-precio); font-weight: 700;"> USD</span>
+              </div>
+              <a id="btnIrReservar" href="./reservar.html" class="btn btn-purple" style="width: auto; padding: 12px 28px;">
+                Reservar
+              </a>
+            </div>
+          </div>
+
+          <!-- Tarjeta de opiniones -->
+          <div class="box-card" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p style="font-size: 1.25rem; font-weight: 800;"><span id="roomRating">4.8</span> ★ <span style="font-weight: 700;">Excelente</span></p>
+              <p id="roomReviewsCount" style="color: var(--texto-etiqueta); margin-top: 6px;">☑ 24 opiniones</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; text-align: right;">
+              <a href="#" id="linkLeerOpiniones" style="color: var(--azul-accion); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
+                Leer todas las opiniones
+              </a>
+              <button type="button" id="btnHacerResena" style="background: none; border: none; color: var(--azul-accion); font-weight: 700; cursor: pointer; font-size: 0.9rem; text-align: right; padding: 0;">
+                Realizar una reseña
+              </button>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="box-card">
+            <h2 style="font-size: 1.15rem; margin-bottom: 8px;">Descripción</h2>
+            <p id="roomDesc" style="color: var(--texto-etiqueta); line-height: 1.5;">
+              Habitación de lujo equipada con acabados modernos.
+            </p>
+          </div>
+
+          <!-- Servicios incluidos -->
+          <div class="box-card">
+            <h2 style="font-size: 1.15rem;">Servicios incluidos</h2>
+            <div id="roomServicesList" class="services-grid"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id') || 'suite';
+      const hab = HotelData.getHabitacion(id);
+
+      document.getElementById('roomTitle').textContent = hab.titulo;
+      document.getElementById('roomPrice').textContent = `$${hab.precio}`;
+      document.getElementById('roomMainImg').src = hab.imagen;
+      document.getElementById('roomDesc').textContent = hab.descripcion;
+      document.getElementById('roomRating').textContent = hab.rating;
+      document.getElementById('roomReviewsCount').textContent = `☑ ${hab.opinionesCount} opiniones`;
+
+      // Renderizar servicios dinámicos
+      const servicesContainer = document.getElementById('roomServicesList');
+      servicesContainer.innerHTML = '';
+      (hab.servicios || []).forEach((srv) => {
+        const item = document.createElement('div');
+        item.className = 'service-item';
+        item.textContent = `✔ ${srv}`;
+        servicesContainer.appendChild(item);
+      });
+
+      // Cargar filtro guardado o fechas por defecto locales y seguras
+      const filtro = JSON.parse(sessionStorage.getItem('filtro_reserva') || 'null');
+      const hoy = SecurityUtils.getLocalDateString();
+      const defSalidaObj = new Date();
+      defSalidaObj.setDate(defSalidaObj.getDate() + 3);
+      const defSalida = SecurityUtils.getLocalDateString(defSalidaObj);
+
+      const entradaEl = document.getElementById('detEntrada');
+      const salidaEl = document.getElementById('detSalida');
+
+      entradaEl.min = hoy;
+      salidaEl.min = hoy;
+
+      entradaEl.value = filtro?.entrada || hoy;
+      salidaEl.value = filtro?.salida || defSalida;
+      if (filtro?.personas) document.getElementById('detPersonas').value = filtro.personas;
+
+      entradaEl.addEventListener('change', () => {
+        salidaEl.min = entradaEl.value;
+        if (salidaEl.value <= entradaEl.value) {
+          const nuevaSalida = new Date(entradaEl.value + 'T00:00:00');
+          nuevaSalida.setDate(nuevaSalida.getDate() + 1);
+          salidaEl.value = SecurityUtils.getLocalDateString(nuevaSalida);
+        }
+      });
+
+      function syncReservaSelection() {
+        const seleccion = {
+          habitacionId: hab.id,
+          titulo: hab.titulo,
+          precioNoche: hab.precio,
+          imagen: hab.imagen,
+          desc: hab.descripcion,
+          servicios: hab.servicios,
+          entrada: document.getElementById('detEntrada').value,
+          salida: document.getElementById('detSalida').value,
+          personas: document.getElementById('detPersonas').value
+        };
+        sessionStorage.setItem('reserva_en_curso', JSON.stringify(seleccion));
+      }
+
+      syncReservaSelection();
+
+      document.getElementById('btnActualizarFiltro').addEventListener('click', () => {
+        if (salidaEl.value <= entradaEl.value) {
+          UI.toast('La fecha de salida debe ser posterior a la fecha de entrada.', 'error');
+          return;
+        }
+        syncReservaSelection();
+        UI.toast('Disponibilidad y fechas actualizadas correctamente.', 'success');
+      });
+
+      document.getElementById('btnIrReservar').addEventListener('click', syncReservaSelection);
+
+      // Reseña mediante modal accesible no bloqueante
+      document.getElementById('btnHacerResena').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const opinion = await UI.prompt('Nueva Reseña', 'Comparte tu experiencia en esta habitación:', '', 'textarea');
+        if (opinion && opinion.trim()) {
+          UI.toast('¡Muchas gracias! Tu opinión ha sido enviada para moderación.', 'success');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

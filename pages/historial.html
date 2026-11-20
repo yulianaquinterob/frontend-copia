@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Reservas - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .historial-card-header {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .historial-card-header img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .badge-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .badge-completada {
+      background-color: #DCFCE7;
+      color: #166534;
+    }
+    .badge-cancelada {
+      background-color: #FEE2E2;
+      color: #991B1B;
+    }
+    @media (max-width: 600px) {
+      .historial-card-header {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <h1 class="page-title">Mi historial de reservas</h1>
+
+      <div id="historialList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;"></div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    // Route Guard
+    if (!SecurityUtils.requireAuth('./login.html')) {
+      // Detiene la ejecución si no está autenticado
+    }
+
+    const HISTORIAL_DEFAULT = [
+      {
+        id: 'HIST-001',
+        titulo: 'Habitación Doble Deluxe',
+        desc: 'Estadía completada con desayuno incluido y acceso a zonas húmedas.',
+        imagen: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=500&q=80',
+        entrada: '2026-08-10',
+        salida: '2026-08-14',
+        personas: '2',
+        total: 160,
+        estado: 'Completada'
+      },
+      {
+        id: 'HIST-002',
+        titulo: 'Habitación Individual Estándar',
+        desc: 'Estadía ejecutiva en habitación individual con conectividad de alta velocidad.',
+        imagen: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=500&q=80',
+        entrada: '2026-07-01',
+        salida: '2026-07-03',
+        personas: '1',
+        total: 60,
+        estado: 'Completada'
+      }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const storageKey = SecurityUtils.getUserStorageKey('historial_reservas');
+      const savedHistorial = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      const lista = savedHistorial && savedHistorial.length > 0 ? savedHistorial : HISTORIAL_DEFAULT;
+
+      const container = document.getElementById('historialList');
+      container.innerHTML = '';
+
+      lista.forEach((item) => {
+        const article = document.createElement('article');
+        article.className = 'box-card';
+
+        const isCancelada = item.estado === 'Cancelada';
+        const badgeClass = isCancelada ? 'badge-cancelada' : 'badge-completada';
+        const badgeText = item.estado || 'Completada';
+
+        article.innerHTML = `
+          <div class="historial-card-header">
+            <div>
+              <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--texto-oscuro);">${SecurityUtils.sanitizeText(item.titulo)}</h2>
+              <span class="badge-status ${badgeClass}">${SecurityUtils.sanitizeText(badgeText)}</span>
+              <p style="color: var(--texto-etiqueta); font-size: 0.9rem; line-height: 1.4; margin-top: 8px;">
+                ${SecurityUtils.sanitizeText(item.desc)}
+              </p>
+            </div>
+            <img src="${item.imagen}" alt="${SecurityUtils.sanitizeText(item.titulo)}">
+          </div>
+
+          <div class="three-col-info">
+            <div>
+              <p style="font-weight: 700; font-size: 0.85rem;">Fecha de entrada</p>
+              <p style="color: var(--texto-etiqueta); margin-top: 4px;">${SecurityUtils.sanitizeText(item.entrada)}</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 0.85rem;">Fecha de salida</p>
+              <p style="color: var(--texto-etiqueta); margin-top: 4px;">${SecurityUtils.sanitizeText(item.salida)}</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 0.85rem;">Huéspedes</p>
+              <p style="color: var(--texto-etiqueta); margin-top: 4px;">${SecurityUtils.sanitizeText(String(item.personas))} personas</p>
+            </div>
+          </div>
+
+          <div style="text-align: right; margin-top: 12px; padding-top: 10px; border-top: 1px solid #F0F0F0;">
+            <span style="font-weight: 800; font-size: 1.1rem;">Total pagado: </span>
+            <span class="price-red-large" style="font-size: 1.4rem;">$${item.total || 50}</span>
+            <span style="color: var(--rojo-precio); font-weight: 700;"> USD</span>
+          </div>
+        `;
+
+        container.appendChild(article);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalles del Pago - Reservas de Hotel</title>
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .card-brands {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .brand-badge {
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      padding: 10px 6px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      background: #FAFAFA;
+    }
+    .total-box-blue {
+      background-color: var(--azul-total-pago);
+      color: #111827;
+      font-weight: 800;
+      font-size: 1.15rem;
+      padding: 14px 18px;
+      border-radius: var(--radio-borde);
+      margin: 18px 0;
+    }
+    .alt-payments {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .alt-pay-btn {
+      border: 1px solid var(--borde-gris);
+      background: #FFFFFF;
+      border-radius: var(--radio-borde);
+      padding: 14px 8px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+    .alt-pay-btn:hover {
+      border-color: var(--morado-principal);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div id="app-header"></div>
+
+    <main class="main-content">
+      <div class="form-container-desktop">
+        <h1 class="page-title">Detalles del pago</h1>
+
+        <!-- Franquicias de tarjeta -->
+        <div class="card-brands">
+          <div class="brand-badge" style="color: #1A1F71;">VISA</div>
+          <div class="brand-badge" style="color: #EB001B;">Mastercard</div>
+          <div class="brand-badge" style="color: #006FCF;">AMEX</div>
+          <div class="brand-badge" style="color: #0079BE;">Diners Club</div>
+        </div>
+
+        <div id="payAlert" class="alert-msg alert-error"></div>
+
+        <form id="paymentForm" autocomplete="on" novalidate>
+          <div class="form-group">
+            <label for="cardHolder" class="form-label">Nombre completo</label>
+            <input type="text" id="cardHolder" class="form-control" autocomplete="cc-name" placeholder="Como aparece en la tarjeta" required>
+          </div>
+
+          <div class="form-group">
+            <label for="cardNumber" class="form-label">Número de tarjeta</label>
+            <input type="text" id="cardNumber" class="form-control" maxlength="25" autocomplete="cc-number" placeholder="xxxx - xxxx - xxxx - xxxx" inputmode="numeric" required>
+          </div>
+
+          <div class="two-col-inputs">
+            <div class="form-group">
+              <label for="cardExp" class="form-label">Fecha de exp.</label>
+              <input type="text" id="cardExp" class="form-control" maxlength="7" autocomplete="cc-exp" placeholder="mm / yy" inputmode="numeric" required>
+            </div>
+            <div class="form-group">
+              <label for="cardCcv" class="form-label">CCV</label>
+              <input type="password" id="cardCcv" class="form-control" maxlength="4" autocomplete="cc-csc" placeholder="xxx" inputmode="numeric" required>
+            </div>
+          </div>
+
+          <div class="total-box-blue">
+            Total: <span id="payTotalDisplay">$150</span> USD
+          </div>
+
+          <button type="submit" class="btn btn-purple">Confirmar pago</button>
+        </form>
+
+        <div style="margin-top: 28px;">
+          <h2 style="font-size: 1.15rem; font-weight: 800;">Otros medios de pago:</h2>
+          <div class="alt-payments">
+            <button type="button" class="alt-pay-btn" data-method="PSE" style="color: #004481;">PSE</button>
+            <button type="button" class="alt-pay-btn" data-method="Bancolombia" style="color: #00448C;">Bancolombia</button>
+            <button type="button" class="alt-pay-btn" data-method="Nequi" style="color: #200020;">NEQUI</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="../js/security.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    // Route Guard: Exige sesión antes de procesar el pago
+    if (!SecurityUtils.requireAuth('./login.html')) {
+      // Detiene la ejecución si no está autenticado
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const reserva = JSON.parse(sessionStorage.getItem('reserva_en_curso') || 'null');
+      const total = reserva?.totalCalculado || 150;
+      document.getElementById('payTotalDisplay').textContent = `$${total}`;
+
+      const cardInput = document.getElementById('cardNumber');
+      const expInput = document.getElementById('cardExp');
+      const ccvInput = document.getElementById('cardCcv');
+      const alertBox = document.getElementById('payAlert');
+
+      // Máscara automática xxxx - xxxx - xxxx - xxxx
+      cardInput.addEventListener('input', (e) => {
+        const digits = e.target.value.replace(/\D/g, '').substring(0, 16);
+        const groups = digits.match(/.{1,4}/g);
+        e.target.value = groups ? groups.join(' - ') : '';
+      });
+
+      // Máscara automática mm / yy
+      expInput.addEventListener('input', (e) => {
+        const digits = e.target.value.replace(/\D/g, '').substring(0, 4);
+        e.target.value = digits.length >= 3 ? `${digits.slice(0, 2)} / ${digits.slice(2)}` : digits;
+      });
+
+      function guardarReservaConfirmada(metodoPago) {
+        const storageKey = SecurityUtils.getUserStorageKey('reservas_activas');
+        const activas = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const nuevaReserva = {
+          id: 'RES-' + Date.now(),
+          titulo: SecurityUtils.sanitizeText(reserva?.titulo || 'Suite'),
+          desc: SecurityUtils.sanitizeText(reserva?.desc || 'Habitación reservada en línea.'),
+          imagen: reserva?.imagen || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=400&q=80',
+          entrada: SecurityUtils.sanitizeText(reserva?.entrada || '2026-10-02'),
+          salida: SecurityUtils.sanitizeText(reserva?.salida || '2026-10-05'),
+          personas: SecurityUtils.sanitizeText(String(reserva?.personas || '2')),
+          total: total,
+          metodo: SecurityUtils.sanitizeText(metodoPago)
+        };
+        activas.push(nuevaReserva);
+        localStorage.setItem(storageKey, JSON.stringify(activas));
+        sessionStorage.removeItem('reserva_en_curso');
+      }
+
+      document.getElementById('paymentForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const holder = document.getElementById('cardHolder').value.trim();
+        const rawCard = cardInput.value.replace(/\D/g, '');
+        const exp = expInput.value.trim();
+        const ccv = ccvInput.value.trim();
+
+        if (!/^[a-zA-ZÁÉÍÓÚáéíóúÑñ\s]{3,}$/.test(holder)) {
+          alertBox.textContent = 'Ingresa el nombre completo del titular de la tarjeta.';
+          alertBox.style.display = 'block';
+          return;
+        }
+        if (!SecurityUtils.isValidLuhn(rawCard)) {
+          alertBox.textContent = 'El número de tarjeta ingresado no es válido.';
+          alertBox.style.display = 'block';
+          return;
+        }
+        if (!SecurityUtils.isValidCardExpiry(exp)) {
+          alertBox.textContent = 'La tarjeta está vencida o el formato de expiración no es válido (mm / yy).';
+          alertBox.style.display = 'block';
+          return;
+        }
+        if (!/^\d{3,4}$/.test(ccv)) {
+          alertBox.textContent = 'Ingresa un código CCV válido de 3 o 4 dígitos.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        alertBox.style.display = 'none';
+        guardarReservaConfirmada('Tarjeta');
+
+        // Seguridad PCI-DSS: limpiar inmediatamente datos sensibles de memoria/DOM
+        cardInput.value = '';
+        expInput.value = '';
+        ccvInput.value = '';
+
+        UI.toast('¡Pago confirmado exitosamente! Redirigiendo...', 'success');
+        setTimeout(() => {
+          window.location.href = './mis-reservas.html';
+        }, 1200);
+      });
+
+      document.querySelectorAll('.alt-pay-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const metodo = btn.dataset.method;
+          guardarReservaConfirmada(metodo);
+          UI.toast(`Pago procesado correctamente a través de ${metodo}.`, 'success');
+          setTimeout(() => {
+            window.location.href = './mis-reservas.html';
+          }, 1200);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

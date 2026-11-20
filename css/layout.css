@@ -1,0 +1,130 @@
+/* Contenedor de pantalla completa */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--fondo-blanco);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Barra superior morada de ancho completo */
+.top-bar {
+  background-color: var(--morado-principal);
+  height: 68px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #FFFFFF;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.top-bar__brand {
+  color: #FFFFFF;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.3px;
+}
+
+.top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: opacity 0.2s;
+}
+
+.icon-btn:hover {
+  opacity: 0.85;
+}
+
+/* Menú lateral desplegable */
+.side-menu {
+  position: fixed;
+  top: 68px;
+  right: 5%;
+  width: 260px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--borde-gris);
+  border-radius: 0 0 var(--radio-borde) var(--radio-borde);
+  box-shadow: var(--sombra-suave);
+  display: none;
+  flex-direction: column;
+  z-index: 99;
+}
+
+.side-menu.active {
+  display: flex;
+}
+
+.side-menu a {
+  padding: 15px 20px;
+  text-decoration: none;
+  color: var(--texto-oscuro);
+  border-bottom: 1px solid #EEEEEE;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.side-menu a:hover {
+  background-color: #F3E8FF;
+  color: var(--morado-principal);
+}
+
+/* Contenido principal centrado con márgenes amplios de escritorio */
+.main-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Contenedor específico para formularios centrados en escritorio (Login, Pago, Perfil) */
+.form-container-desktop {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Barra inferior morada institucional */
+.bottom-bar {
+  background-color: var(--morado-principal);
+  color: #FFFFFF;
+  padding: 16px 5%;
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.bottom-bar a {
+  color: #FFFFFF;
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.bottom-bar a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
